@@ -12,7 +12,7 @@ from typing import Dict, List, Optional, Union
 
 from fastapi import FastAPI, HTTPException, Path as FastPath, Query, status
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
+from fastapi.responses import FileResponse, JSONResponse
 
 # Add project root to sys.path if not present
 current_dir = Path(__file__).resolve().parent
@@ -107,8 +107,17 @@ app.add_middleware(
 )
 
 
+@app.get("/", summary="Web Application UI", tags=["UI"])
+async def serve_ui():
+    """Serves the interactive high-contrast single page web application."""
+    html_file = project_root / "src" / "web" / "index.html"
+    if html_file.exists():
+        return FileResponse(html_file, media_type="text/html")
+    return {"status": "UI file missing", "docs": "/docs"}
+
+
 @app.get(
-    "/",
+    "/api/health",
     response_model=HealthResponse,
     tags=["System"],
     summary="Health Check",

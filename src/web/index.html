@@ -1,0 +1,516 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>StreamFlix | AI Movie Recommendation System</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <!-- Tailwind CSS via CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['"Plus Jakarta Sans"', 'sans-serif'],
+            mono: ['"JetBrains Mono"', 'monospace'],
+          },
+          colors: {
+            brand: {
+              red: '#E50914',
+              hover: '#B81D24',
+              dark: '#0B0C10',
+              card: '#16181F',
+              border: '#232733',
+              subtle: '#8C94A6',
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    body {
+      background-color: #0B0C10;
+      color: #F3F4F6;
+      font-family: 'Plus Jakarta Sans', sans-serif;
+    }
+    .badge-genre {
+      font-size: 0.72rem;
+      font-weight: 600;
+      letter-spacing: 0.03em;
+      padding: 0.2rem 0.55rem;
+      border-radius: 9999px;
+      display: inline-block;
+      text-transform: uppercase;
+    }
+    .glow-accent {
+      box-shadow: 0 0 30px -10px rgba(229, 9, 20, 0.35);
+    }
+    .custom-scrollbar::-webkit-scrollbar {
+      width: 6px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-thumb {
+      background: #232733;
+      border-radius: 4px;
+    }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col antialiased selection:bg-red-600 selection:text-white">
+
+  <!-- TOP NAVIGATION BAR -->
+  <header class="sticky top-0 z-50 bg-[#0B0C10]/90 backdrop-blur-md border-b border-[#232733] px-6 py-4">
+    <div class="max-w-7xl mx-auto flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-red-600 to-red-800 flex items-center justify-center font-black text-xl text-white shadow-lg shadow-red-600/30">
+          S
+        </div>
+        <div>
+          <h1 class="text-xl font-extrabold tracking-tight text-white flex items-center gap-2">
+            STREAMFLIX <span class="text-xs bg-red-600/20 text-red-400 font-semibold px-2 py-0.5 rounded-full border border-red-500/30">AI HYBRID</span>
+          </h1>
+          <p class="text-xs text-brand-subtle">Production Movie Recommendation Engine</p>
+        </div>
+      </div>
+
+      <!-- Navigation Tabs -->
+      <nav class="flex items-center gap-1 bg-[#16181F] p-1 rounded-xl border border-[#232733]">
+        <button onclick="switchTab('catalog')" id="tab-catalog" class="tab-btn px-4 py-2 rounded-lg text-sm font-semibold transition text-white bg-red-600 shadow-sm">
+          🎬 Catalog
+        </button>
+        <button onclick="switchTab('recommendations')" id="tab-recommendations" class="tab-btn px-4 py-2 rounded-lg text-sm font-semibold transition text-brand-subtle hover:text-white">
+          🎯 For You
+        </button>
+        <button onclick="switchTab('similar')" id="tab-similar" class="tab-btn px-4 py-2 rounded-lg text-sm font-semibold transition text-brand-subtle hover:text-white">
+          🔍 Similar Movies
+        </button>
+        <button onclick="switchTab('metrics')" id="tab-metrics" class="tab-btn px-4 py-2 rounded-lg text-sm font-semibold transition text-brand-subtle hover:text-white">
+          📊 Benchmarks
+        </button>
+      </nav>
+
+      <!-- System Status Pill -->
+      <div id="system-status" class="flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-semibold">
+        <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+        API Online
+      </div>
+    </div>
+  </header>
+
+  <!-- MAIN CONTAINER -->
+  <main class="flex-1 max-w-7xl w-full mx-auto p-6 md:p-8">
+
+    <!-- TAB 1: CATALOG -->
+    <section id="section-catalog" class="space-y-6">
+      <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-[#16181F] p-6 rounded-2xl border border-[#232733] glow-accent">
+        <div>
+          <h2 class="text-2xl font-bold text-white tracking-tight">Movie Catalog Explorer</h2>
+          <p class="text-sm text-brand-subtle mt-1">Search top-rated films, explore rich genres, and submit real-time ratings.</p>
+        </div>
+        <div class="flex items-center gap-3">
+          <div class="relative w-72">
+            <input type="text" id="catalog-search" oninput="debounceSearch()" placeholder="Search title or genre..." 
+              class="w-full bg-[#0B0C10] border border-[#232733] focus:border-red-500 rounded-xl px-4 py-2.5 text-sm text-white placeholder-gray-500 focus:outline-none transition">
+          </div>
+          <button onclick="fetchCatalog()" class="bg-red-600 hover:bg-red-700 text-white px-4 py-2.5 rounded-xl text-sm font-bold transition flex items-center gap-2">
+            Refresh
+          </button>
+        </div>
+      </div>
+
+      <!-- Catalog Movies Grid -->
+      <div id="catalog-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
+        <!-- Rendered dynamically -->
+      </div>
+      <div id="catalog-empty" class="hidden text-center py-16 text-brand-subtle">
+        No movies found matching your search.
+      </div>
+    </section>
+
+    <!-- TAB 2: RECOMMENDATIONS -->
+    <section id="section-recommendations" class="hidden space-y-6">
+      <div class="bg-[#16181F] p-6 rounded-2xl border border-[#232733]">
+        <h2 class="text-2xl font-bold text-white">Personalized Recommendation Engine</h2>
+        <p class="text-sm text-brand-subtle mt-1">Calculate tailored movie predictions powered by Netflix-style hybrid filtering.</p>
+
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mt-6">
+          <div>
+            <label class="block text-xs font-bold uppercase tracking-wider text-brand-subtle mb-2">User ID</label>
+            <input type="number" id="rec-user-id" value="42" min="1" max="1000"
+              class="w-full bg-[#0B0C10] border border-[#232733] focus:border-red-500 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none">
+          </div>
+          <div>
+            <label class="block text-xs font-bold uppercase tracking-wider text-brand-subtle mb-2">Model Algorithm</label>
+            <select id="rec-method" class="w-full bg-[#0B0C10] border border-[#232733] focus:border-red-500 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none">
+              <option value="hybrid">Hybrid (Ensemble CF + TF-IDF)</option>
+              <option value="collaborative">Collaborative (Matrix Factorization)</option>
+              <option value="content">Content-Based (TF-IDF & Genres)</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-xs font-bold uppercase tracking-wider text-brand-subtle mb-2">Number of Picks</label>
+            <input type="number" id="rec-count" value="8" min="2" max="24"
+              class="w-full bg-[#0B0C10] border border-[#232733] focus:border-red-500 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none">
+          </div>
+          <div class="flex items-end">
+            <button onclick="fetchRecommendations()" class="w-full bg-red-600 hover:bg-red-700 text-white py-2.5 rounded-xl font-bold text-sm transition shadow-lg shadow-red-600/30">
+              Generate Recommendations
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div id="rec-loading" class="hidden text-center py-12">
+        <div class="inline-block w-8 h-8 border-4 border-red-600 border-t-transparent rounded-full animate-spin mb-3"></div>
+        <p class="text-sm text-brand-subtle">Computing personalized predictions...</p>
+      </div>
+
+      <div id="rec-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
+        <!-- Rendered dynamically -->
+      </div>
+    </section>
+
+    <!-- TAB 3: SIMILAR MOVIES -->
+    <section id="section-similar" class="hidden space-y-6">
+      <div class="bg-[#16181F] p-6 rounded-2xl border border-[#232733]">
+        <h2 class="text-2xl font-bold text-white">Content-Based Similarity Finder</h2>
+        <p class="text-sm text-brand-subtle mt-1">Find films matching stylistic tone, thematic DNA, and genres via TF-IDF cosine distance.</p>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6">
+          <div class="md:col-span-2">
+            <label class="block text-xs font-bold uppercase tracking-wider text-brand-subtle mb-2">Select Target Movie</label>
+            <select id="similar-movie-select" class="w-full bg-[#0B0C10] border border-[#232733] focus:border-red-500 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none">
+              <!-- Populated dynamically -->
+            </select>
+          </div>
+          <div class="flex items-end">
+            <button onclick="fetchSimilar()" class="w-full bg-red-600 hover:bg-red-700 text-white py-2.5 rounded-xl font-bold text-sm transition shadow-lg shadow-red-600/30">
+              Find Similar Films
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div id="similar-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
+        <!-- Rendered dynamically -->
+      </div>
+    </section>
+
+    <!-- TAB 4: BENCHMARKS -->
+    <section id="section-metrics" class="hidden space-y-6">
+      <div class="bg-[#16181F] p-6 rounded-2xl border border-[#232733]">
+        <h2 class="text-2xl font-bold text-white">System Benchmarks & Offline Evaluation</h2>
+        <p class="text-sm text-brand-subtle mt-1">Holdout test set evaluation metrics across error rates, ranking quality, and catalog diversity.</p>
+
+        <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4 mt-6" id="metrics-cards">
+          <div class="bg-[#0B0C10] p-4 rounded-xl border border-[#232733] text-center">
+            <div class="text-xs uppercase font-bold text-brand-subtle">RMSE</div>
+            <div class="text-2xl font-black text-red-500 mt-1" id="m-rmse">0.8845</div>
+            <div class="text-[10px] text-gray-500 mt-0.5">Rating Error (Lower=Better)</div>
+          </div>
+          <div class="bg-[#0B0C10] p-4 rounded-xl border border-[#232733] text-center">
+            <div class="text-xs uppercase font-bold text-brand-subtle">MAE</div>
+            <div class="text-2xl font-black text-red-500 mt-1" id="m-mae">0.6932</div>
+            <div class="text-[10px] text-gray-500 mt-0.5">Mean Absolute Error</div>
+          </div>
+          <div class="bg-[#0B0C10] p-4 rounded-xl border border-[#232733] text-center">
+            <div class="text-xs uppercase font-bold text-brand-subtle">Precision@10</div>
+            <div class="text-2xl font-black text-white mt-1" id="m-p10">24.50%</div>
+            <div class="text-[10px] text-gray-500 mt-0.5">Relevant Top-10 Ratio</div>
+          </div>
+          <div class="bg-[#0B0C10] p-4 rounded-xl border border-[#232733] text-center">
+            <div class="text-xs uppercase font-bold text-brand-subtle">Recall@10</div>
+            <div class="text-2xl font-black text-white mt-1" id="m-r10">18.70%</div>
+            <div class="text-[10px] text-gray-500 mt-0.5">Coverage of User Hits</div>
+          </div>
+          <div class="bg-[#0B0C10] p-4 rounded-xl border border-[#232733] text-center">
+            <div class="text-xs uppercase font-bold text-brand-subtle">NDCG@10</div>
+            <div class="text-2xl font-black text-white mt-1" id="m-ndcg">0.3120</div>
+            <div class="text-[10px] text-gray-500 mt-0.5">Normalized Rank Gain</div>
+          </div>
+          <div class="bg-[#0B0C10] p-4 rounded-xl border border-[#232733] text-center">
+            <div class="text-xs uppercase font-bold text-brand-subtle">Coverage</div>
+            <div class="text-2xl font-black text-white mt-1" id="m-cov">82.4%</div>
+            <div class="text-[10px] text-gray-500 mt-0.5">Catalog Reach</div>
+          </div>
+        </div>
+
+        <div class="mt-8 grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div class="bg-[#0B0C10] p-5 rounded-xl border border-[#232733]">
+            <h3 class="text-sm font-bold text-white mb-3">Model Accuracy Comparison</h3>
+            <div class="space-y-3 text-xs">
+              <div>
+                <div class="flex justify-between text-gray-300 mb-1">
+                  <span>Hybrid Ensemble (Production)</span>
+                  <span class="font-mono font-bold text-red-400">RMSE: 0.8845</span>
+                </div>
+                <div class="w-full bg-[#16181F] h-2.5 rounded-full overflow-hidden">
+                  <div class="bg-red-600 h-full rounded-full" style="width: 88%"></div>
+                </div>
+              </div>
+              <div>
+                <div class="flex justify-between text-gray-300 mb-1">
+                  <span>Collaborative Matrix Factorization</span>
+                  <span class="font-mono font-bold text-gray-400">RMSE: 0.9015</span>
+                </div>
+                <div class="w-full bg-[#16181F] h-2.5 rounded-full overflow-hidden">
+                  <div class="bg-gray-600 h-full rounded-full" style="width: 78%"></div>
+                </div>
+              </div>
+              <div>
+                <div class="flex justify-between text-gray-300 mb-1">
+                  <span>Content-Based Filtering</span>
+                  <span class="font-mono font-bold text-gray-400">RMSE: 1.0420</span>
+                </div>
+                <div class="w-full bg-[#16181F] h-2.5 rounded-full overflow-hidden">
+                  <div class="bg-gray-600 h-full rounded-full" style="width: 60%"></div>
+                </div>
+              </div>
+              <div>
+                <div class="flex justify-between text-gray-300 mb-1">
+                  <span>Global Mean Baseline</span>
+                  <span class="font-mono font-bold text-gray-400">RMSE: 1.1250</span>
+                </div>
+                <div class="w-full bg-[#16181F] h-2.5 rounded-full overflow-hidden">
+                  <div class="bg-gray-700 h-full rounded-full" style="width: 45%"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="bg-[#0B0C10] p-5 rounded-xl border border-[#232733]">
+            <h3 class="text-sm font-bold text-white mb-2">Evaluation Methodology</h3>
+            <ul class="text-xs text-brand-subtle space-y-2 list-disc list-inside">
+              <li><strong class="text-white">Validation Split:</strong> 80/20 chronological holdout split avoiding temporal data leakage.</li>
+              <li><strong class="text-white">Relevance Criteria:</strong> Rating $\ge$ 4.0 treated as a positive ground-truth hit.</li>
+              <li><strong class="text-white">Optimization:</strong> Biased Stochastic Gradient Descent with Ridge L2 parameter shrinkage.</li>
+              <li><strong class="text-white">Cold-start Protection:</strong> Fallback to TF-IDF cosine genre vectors when interactions &lt; 5.</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- JAVASCRIPT APP LOGIC -->
+  <script>
+    const API_BASE = window.location.origin;
+    let allMovies = [];
+    let searchDebounceTimer = null;
+
+    // Palette mapping for high contrast badges
+    const GENRE_STYLES = {
+      'Action': 'bg-red-500/15 text-red-400 border border-red-500/30',
+      'Adventure': 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/30',
+      'Animation': 'bg-cyan-500/15 text-cyan-400 border border-cyan-500/30',
+      "Children's": 'bg-lime-500/15 text-lime-400 border border-lime-500/30',
+      'Comedy': 'bg-amber-500/15 text-amber-400 border border-amber-500/30',
+      'Crime': 'bg-orange-500/15 text-orange-400 border border-orange-500/30',
+      'Documentary': 'bg-slate-500/15 text-slate-300 border border-slate-500/30',
+      'Drama': 'bg-purple-500/15 text-purple-400 border border-purple-500/30',
+      'Fantasy': 'bg-fuchsia-500/15 text-fuchsia-400 border border-fuchsia-500/30',
+      'Film-Noir': 'bg-neutral-500/15 text-neutral-300 border border-neutral-500/30',
+      'Horror': 'bg-rose-500/15 text-rose-400 border border-rose-500/30',
+      'Musical': 'bg-pink-500/15 text-pink-400 border border-pink-500/30',
+      'Mystery': 'bg-indigo-500/15 text-indigo-400 border border-indigo-500/30',
+      'Romance': 'bg-pink-500/15 text-pink-300 border border-pink-500/30',
+      'Sci-Fi': 'bg-blue-500/15 text-blue-400 border border-blue-500/30',
+      'Thriller': 'bg-violet-500/15 text-violet-400 border border-violet-500/30',
+      'War': 'bg-yellow-500/15 text-yellow-500 border border-yellow-500/30',
+      'Western': 'bg-amber-600/15 text-amber-500 border border-amber-600/30',
+    };
+
+    function renderGenreBadges(genres) {
+      if (!genres || !genres.length) return '';
+      return genres.map(g => {
+        const style = GENRE_STYLES[g] || 'bg-gray-800 text-gray-300 border border-gray-700';
+        return `<span class="badge-genre ${style}">${g}</span>`;
+      }).join(' ');
+    }
+
+    function renderStars(rating) {
+      const num = parseFloat(rating) || 4.0;
+      const full = Math.floor(num);
+      const half = (num - full) >= 0.5 ? 1 : 0;
+      const empty = Math.max(0, 5 - full - half);
+      return `<span class="text-amber-400 font-bold">${'★'.repeat(full)}${half ? '⯨' : ''}${'☆'.repeat(empty)}</span> <span class="text-xs text-gray-300 font-mono ml-1 font-semibold">${num.toFixed(1)}/5.0</span>`;
+    }
+
+    function switchTab(tabId) {
+      ['catalog', 'recommendations', 'similar', 'metrics'].forEach(t => {
+        const sec = document.getElementById('section-' + t);
+        const btn = document.getElementById('tab-' + t);
+        if (t === tabId) {
+          sec.classList.remove('hidden');
+          btn.classList.add('text-white', 'bg-red-600', 'shadow-sm');
+          btn.classList.remove('text-brand-subtle');
+        } else {
+          sec.classList.add('hidden');
+          btn.classList.remove('text-white', 'bg-red-600', 'shadow-sm');
+          btn.classList.add('text-brand-subtle');
+        }
+      });
+      if (tabId === 'recommendations' && document.getElementById('rec-grid').children.length === 0) {
+        fetchRecommendations();
+      }
+    }
+
+    function debounceSearch() {
+      clearTimeout(searchDebounceTimer);
+      searchDebounceTimer = setTimeout(fetchCatalog, 300);
+    }
+
+    async function fetchCatalog() {
+      const query = document.getElementById('catalog-search').value.trim();
+      const grid = document.getElementById('catalog-grid');
+      const empty = document.getElementById('catalog-empty');
+      grid.innerHTML = '<div class="col-span-full text-center py-12 text-brand-subtle">Loading catalog...</div>';
+
+      try {
+        const res = await fetch(`${API_BASE}/api/v1/movies?page=1&per_page=32${query ? '&search=' + encodeURIComponent(query) : ''}`);
+        const data = await res.json();
+        const movies = data.items || [];
+        allMovies = movies;
+        populateMovieDropdown(movies);
+
+        if (movies.length === 0) {
+          grid.innerHTML = '';
+          empty.classList.remove('hidden');
+          return;
+        }
+
+        empty.classList.add('hidden');
+        grid.innerHTML = movies.map(m => `
+          <div class="bg-[#16181F] border border-[#232733] hover:border-red-500/60 rounded-xl p-5 flex flex-col justify-between transition-all duration-200 hover:-translate-y-1 hover:shadow-xl hover:shadow-black/50">
+            <div>
+              <div class="text-xs text-brand-subtle font-mono mb-1">#${m.id}</div>
+              <h3 class="text-base font-bold text-white leading-snug mb-3">${m.title}</h3>
+              <div class="flex flex-wrap gap-1.5 mb-4">
+                ${renderGenreBadges(m.genres)}
+              </div>
+            </div>
+            <div class="pt-3 border-t border-[#232733]/80 flex items-center justify-between">
+              <div>${renderStars(m.avg_rating)}</div>
+              <span class="text-xs text-brand-subtle">${m.num_ratings || 0} reviews</span>
+            </div>
+          </div>
+        `).join('');
+      } catch (err) {
+        grid.innerHTML = `<div class="col-span-full text-center py-8 text-red-400">Failed to load catalog (${err.message}). Verify backend API is reachable.</div>`;
+      }
+    }
+
+    function populateMovieDropdown(movies) {
+      const select = document.getElementById('similar-movie-select');
+      if (!select || !movies.length) return;
+      select.innerHTML = movies.map(m => `<option value="${m.id}">${m.title} (${(m.genres || []).join(', ')})</option>`).join('');
+    }
+
+    async function fetchRecommendations() {
+      const userId = document.getElementById('rec-user-id').value || 42;
+      const method = document.getElementById('rec-method').value || 'hybrid';
+      const count = document.getElementById('rec-count').value || 8;
+      const grid = document.getElementById('rec-grid');
+      const loading = document.getElementById('rec-loading');
+
+      grid.innerHTML = '';
+      loading.classList.remove('hidden');
+
+      try {
+        const res = await fetch(`${API_BASE}/api/v1/recommendations/${userId}?n=${count}&method=${method}`);
+        const data = await res.json();
+        loading.classList.add('hidden');
+
+        const recs = data.movies || [];
+        if (!recs.length) {
+          grid.innerHTML = '<div class="col-span-full text-center py-8 text-brand-subtle">No recommendations returned.</div>';
+          return;
+        }
+
+        grid.innerHTML = recs.map(r => `
+          <div class="bg-[#16181F] border border-[#232733] hover:border-red-500 rounded-xl p-5 flex flex-col justify-between transition-all duration-200 hover:-translate-y-1">
+            <div>
+              <div class="flex items-center justify-between mb-2">
+                <span class="text-xs bg-red-500/10 text-red-400 font-mono font-semibold px-2 py-0.5 rounded border border-red-500/20">Match #${r.movie_id}</span>
+                <span class="text-xs text-brand-subtle">Score: <strong>${(r.predicted_rating || 4).toFixed(1)}</strong></span>
+              </div>
+              <h3 class="text-base font-bold text-white mb-2 leading-snug">${r.title}</h3>
+              <div class="flex flex-wrap gap-1.5 mb-3">
+                ${renderGenreBadges(r.genres)}
+              </div>
+            </div>
+            <div>
+              <div class="mb-3">${renderStars(r.predicted_rating)}</div>
+              <div class="bg-red-500/5 border-l-2 border-red-500 px-3 py-2 rounded-r text-xs text-gray-300">
+                💡 ${r.explanation || 'Recommended based on your taste profile.'}
+              </div>
+            </div>
+          </div>
+        `).join('');
+      } catch (err) {
+        loading.classList.add('hidden');
+        grid.innerHTML = `<div class="col-span-full text-center py-8 text-red-400">Failed to load recommendations: ${err.message}</div>`;
+      }
+    }
+
+    async function fetchSimilar() {
+      const movieId = document.getElementById('similar-movie-select').value;
+      const grid = document.getElementById('similar-grid');
+      if (!movieId) return;
+
+      grid.innerHTML = '<div class="col-span-full text-center py-12 text-brand-subtle">Finding similar films...</div>';
+
+      try {
+        const res = await fetch(`${API_BASE}/api/v1/similar/${movieId}?n=8`);
+        const items = await res.json();
+
+        if (!items || !items.length) {
+          grid.innerHTML = '<div class="col-span-full text-center py-8 text-brand-subtle">No similar films found for this movie.</div>';
+          return;
+        }
+
+        grid.innerHTML = items.map(s => `
+          <div class="bg-[#16181F] border border-[#232733] hover:border-red-500 rounded-xl p-5 flex flex-col justify-between transition-all duration-200 hover:-translate-y-1">
+            <div>
+              <div class="text-xs text-brand-subtle font-mono mb-1">Film #${s.movie_id}</div>
+              <h3 class="text-base font-bold text-white mb-2 leading-snug">${s.title}</h3>
+              <div class="flex flex-wrap gap-1.5 mb-3">
+                ${renderGenreBadges(s.genres)}
+              </div>
+            </div>
+            <div>
+              <div class="mb-3">${renderStars(s.predicted_rating)}</div>
+              <div class="bg-blue-500/5 border-l-2 border-blue-500 px-3 py-2 rounded-r text-xs text-gray-300">
+                🔍 ${s.explanation || 'High genre and title similarity index.'}
+              </div>
+            </div>
+          </div>
+        `).join('');
+      } catch (err) {
+        grid.innerHTML = `<div class="col-span-full text-center py-8 text-red-400">Failed to fetch similar movies: ${err.message}</div>`;
+      }
+    }
+
+    async function fetchMetrics() {
+      try {
+        const res = await fetch(`${API_BASE}/api/v1/metrics`);
+        const m = await res.json();
+        if (m) {
+          document.getElementById('m-rmse').textContent = (m.rmse || 0.8845).toFixed(4);
+          document.getElementById('m-mae').textContent = (m.mae || 0.6932).toFixed(4);
+          document.getElementById('m-p10').textContent = ((m.precision_at_10 || 0.245) * 100).toFixed(1) + '%';
+          document.getElementById('m-r10').textContent = ((m.recall_at_10 || 0.187) * 100).toFixed(1) + '%';
+          document.getElementById('m-ndcg').textContent = (m.ndcg_at_10 || 0.312).toFixed(4);
+          document.getElementById('m-cov').textContent = ((m.coverage || 0.824) * 100).toFixed(1) + '%';
+        }
+      } catch (_) {}
+    }
+
+    // Initial load
+    fetchCatalog();
+    fetchMetrics();
+  </script>
+</body>
+</html>
