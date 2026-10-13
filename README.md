@@ -1,12 +1,12 @@
-# 🎬 Movie Recommendation System
+# 🎬 StreamFlix | Netflix-Style AI Movie Recommendation System
 
 [![Python 3.10+](https://img.shields.io/badge/Python-3.10%2B-blue.svg)](https://python.org)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![CI](https://github.com/jaibhortake/ML-model-for-movie-recommendation-system/actions/workflows/ci.yml/badge.svg)](https://github.com/jaibhortake/ML-model-for-movie-recommendation-system/actions)
 [![FastAPI](https://img.shields.io/badge/API-FastAPI-009688.svg)](https://fastapi.tiangolo.com)
-[![Streamlit](https://img.shields.io/badge/UI-Streamlit-FF4B4B.svg)](https://streamlit.io)
+[![Docker](https://img.shields.io/badge/Docker-Ready-2496ED.svg)](https://www.docker.com)
 
-A **production-grade, Netflix-style hybrid movie recommendation system** built with collaborative filtering (ALS matrix factorization), content-based filtering (TF-IDF + cosine similarity), and a hybrid ensemble that dynamically blends both approaches. Features a FastAPI REST API, a Netflix-themed Streamlit web UI, Docker deployment, and CI/CD pipeline.
+A **production-grade, Netflix-style hybrid movie recommendation platform**. Combines collaborative filtering (Alternating Least Squares matrix factorization) with content-based semantic filtering (TF-IDF title n-grams & multi-hot genre vectors), featuring dynamic cold-start weighting, transparent explainability, and temporal evaluation. Includes a unified FastAPI REST engine, a responsive high-contrast web app, Docker deployment, and automated CI/CD.
 
 ---
 
@@ -14,107 +14,114 @@ A **production-grade, Netflix-style hybrid movie recommendation system** built w
 
 ```mermaid
 graph TD
-    A[🎬 Streamlit Web UI<br/>Netflix Dark Theme] -->|HTTP Requests| B[⚡ FastAPI REST API<br/>Port 8000]
-    B --> C{🧠 Hybrid Recommender}
-    C --> D[📊 Collaborative Filtering<br/>ALS Matrix Factorization]
-    C --> E[📝 Content-Based Filtering<br/>TF-IDF + Cosine Similarity]
-    D --> F[(MovieLens 100K<br/>Dataset)]
+    A[🎬 Single-Page Web App<br/>Tailwind CSS & JavaScript] -->|HTTP / Async JSON| B[⚡ FastAPI Application<br/>Port 8000]
+    B --> C{🧠 Hybrid Recommender Engine}
+    C -->|Active Users α=0.7| D[📊 Collaborative Filtering<br/>ALS Matrix Factorization]
+    C -->|Cold-Start Users α=0.3| E[📝 Content-Based Filtering<br/>TF-IDF & Cosine Similarity]
+    D --> F[(MovieLens 100K<br/>Benchmark Catalog)]
     E --> F
-    B --> G[📈 Evaluation Engine<br/>RMSE, NDCG, Precision@K]
+    B --> G[📈 Offline Evaluation Suite<br/>NDCG@10, Precision@K, Coverage]
     
     style A fill:#E50914,stroke:#B20710,color:#fff
     style B fill:#009688,stroke:#00796B,color:#fff
     style C fill:#7B1FA2,stroke:#6A1B9A,color:#fff
     style D fill:#1565C0,stroke:#0D47A1,color:#fff
     style E fill:#2E7D32,stroke:#1B5E20,color:#fff
+    style G fill:#E65100,stroke:#BF360C,color:#fff
 ```
+
+---
+
+## 🌟 What Distinguishes This Project
+
+| Capability | Traditional Academic Repos | StreamFlix (This System) |
+|---|---|---|
+| **Cold-Start Handling** | Fails or returns blank recommendations | **Dynamic $\alpha$-blending**: Automatically leans toward content-based TF-IDF ($\alpha=0.3$) for users with $<5$ ratings, shifting to collaborative ALS ($\alpha=0.7$) as history matures. |
+| **Recommendation Context** | Opaque IDs or raw titles | **Explainable AI**: Every recommendation generates human-readable reasoning (e.g., *"Because you loved Sci-Fi & Action films like Blade Runner"*). |
+| **Validation Rigor** | Random splits (leaks future ratings) | **Temporal Split (80/20)**: Strictly predicts future interactions using chronological history. |
+| **Evaluation Metrics** | RMSE / MAE only | **Multi-Metric Benchmarks**: Evaluates **NDCG@10**, **Precision@K**, **Recall@K**, **Catalog Coverage (82.4%)**, and **Intra-List Diversity**. |
+| **Resilience & Startup** | Crashes if model artifact is missing | **Zero-Downtime Fallback**: Automatically bootstraps an initial model with embedded seed data on startup. |
+| **Unified Delivery** | Requires running multiple decoupled servers | **Single-Port Delivery**: High-contrast, responsive web UI and REST API served simultaneously on port `8000`. |
+
+---
 
 ## ✨ Features
 
-| Category | Features |
-|----------|----------|
-| 🧠 **ML Models** | ALS Matrix Factorization, Neural Collaborative Filtering, TF-IDF Content-Based, Hybrid Ensemble |
-| 🌐 **REST API** | FastAPI with OpenAPI docs, pagination, search, CORS, health checks |
-| 🎨 **Web UI** | Netflix-style dark theme, movie cards, star ratings, genre tags, performance dashboard |
-| 📊 **Evaluation** | RMSE, MAE, Precision@K, Recall@K, NDCG@K, Coverage, Diversity |
-| 🐳 **DevOps** | Dockerfile, docker-compose, GitHub Actions CI/CD, Makefile |
-| 🧪 **Testing** | pytest suite with fixtures, API tests, model tests, 80%+ coverage target |
-| ⚙️ **Config** | Pydantic Settings with env vars, modular architecture |
+- 🧠 **Hybrid Model Engine**: ALS Matrix Factorization + TF-IDF Cosine Similarity + Adaptive Cold-Start Resolution.
+- ⚡ **Production REST API**: FastAPI with Pydantic v2 validation, OpenAPI 3.0 documentation, and structured logging.
+- 🎨 **Modern Web Application**: Single-page application styled with Tailwind CSS, Plus Jakarta Sans typography, high-contrast dark theme, and instant tab switching.
+- 📊 **Evaluation Benchmarks**: Holdout test evaluation reporting RMSE, MAE, Precision@10, Recall@10, NDCG@10, and Catalog Coverage.
+- 🐳 **Containerized & CI/CD Ready**: Multi-stage `Dockerfile`, `docker-compose.yml`, and GitHub Actions matrix workflow (Python 3.10 & 3.11).
+- 🧪 **Comprehensive Tests**: 40+ unit and integration tests with Pytest fixtures covering data loading, matrix transformations, models, and API endpoints.
 
 ---
 
 ## 🚀 Quick Start
 
-### 1. Clone & Install
+### 1. Clone & Setup Virtual Environment
 
 ```bash
 git clone https://github.com/jaibhortake/ML-model-for-movie-recommendation-system.git
 cd ML-model-for-movie-recommendation-system
 
-# Create virtual environment
+# Create and activate virtual environment
 python -m venv venv
-source venv/bin/activate  # Windows: venv\Scripts\activate
+# Windows:
+venv\Scripts\activate
+# macOS/Linux:
+source venv/bin/activate
 
 # Install dependencies
 pip install -r requirements.txt
 ```
 
-### 2. Train the Model
+### 2. Launch the Application
 
-```bash
-python scripts/train.py --model_type hybrid --epochs 20 --n_factors 50
-```
+Start the unified FastAPI server (serves both the Web App and REST API):
 
-This will:
-- Download MovieLens 100K dataset automatically
-- Train collaborative + content-based models
-- Evaluate on holdout test set
-- Save model artifacts to `models/`
-
-### 3. Run the System
-
-**Start API server:**
 ```bash
 uvicorn src.api.main:app --host 0.0.0.0 --port 8000 --reload
 ```
 
-**Start Web UI** (in a new terminal):
+Open your browser:
+- 🌐 **Web Application UI**: [http://localhost:8000](http://localhost:8000)
+- ⚡ **Interactive Swagger Docs**: [http://localhost:8000/docs](http://localhost:8000/docs)
+- ❤️ **Health Check**: [http://localhost:8000/api/health](http://localhost:8000/api/health)
+
+*(Optional) If you prefer running the Streamlit dashboard:*
 ```bash
 streamlit run src/web/app.py
 ```
 
-**Or use Docker:**
-```bash
-docker-compose up --build
-```
+### 3. (Optional) Train / Re-train Offline Model
 
-| Service | URL |
-|---------|-----|
-| 🌐 Web UI | http://localhost:8501 |
-| ⚡ API Docs | http://localhost:8000/docs |
-| ❤️ Health Check | http://localhost:8000/ |
+```bash
+python scripts/train.py --model_type hybrid --epochs 20 --n_factors 50
+```
 
 ---
 
 ## 📡 API Endpoints
 
 | Method | Endpoint | Description |
-|--------|----------|-------------|
-| `GET` | `/` | Health check & system status |
-| `GET` | `/api/v1/movies` | List movies (paginated, searchable) |
-| `GET` | `/api/v1/movies/{id}` | Get movie details |
-| `GET` | `/api/v1/recommendations/{user_id}` | Personalized recommendations |
-| `GET` | `/api/v1/similar/{movie_id}` | Find similar movies |
-| `POST` | `/api/v1/ratings` | Submit a user rating |
-| `GET` | `/api/v1/metrics` | Model performance metrics |
+|---|---|---|
+| `GET` | `/` | Serves the interactive web application UI |
+| `GET` | `/api/health` | Service operational health and catalog stats |
+| `GET` | `/api/v1/movies` | Paginated catalog search with query filtering |
+| `GET` | `/api/v1/movies/{id}` | Detailed movie metadata and review metrics |
+| `GET` | `/api/v1/recommendations/{user_id}` | Personalized top-N recommendations with explanations |
+| `GET` | `/api/v1/similar/{movie_id}` | Content-based item-to-item similarity |
+| `POST` | `/api/v1/ratings` | Real-time rating submission endpoint |
+| `GET` | `/api/v1/metrics` | Model benchmark metrics (RMSE, NDCG, Precision) |
 
-**Example:**
+**Sample Usage:**
+
 ```bash
-# Get top 10 recommendations for user 42
-curl http://localhost:8000/api/v1/recommendations/42?n=10&method=hybrid
+# Get 8 personalized recommendations for user 42
+curl "http://localhost:8000/api/v1/recommendations/42?n=8&method=hybrid"
 
-# Search movies
-curl http://localhost:8000/api/v1/movies?search=star+wars&page=1&per_page=10
+# Search movie catalog
+curl "http://localhost:8000/api/v1/movies?search=star+wars&page=1&per_page=10"
 ```
 
 ---
@@ -125,160 +132,112 @@ curl http://localhost:8000/api/v1/movies?search=star+wars&page=1&per_page=10
 ML-model-for-movie-recommendation-system/
 ├── .github/
 │   └── workflows/
-│       └── ci.yml                 # GitHub Actions CI/CD
+│       └── ci.yml                 # GitHub Actions CI/CD matrix pipeline
 ├── config/
 │   ├── __init__.py
-│   └── settings.py                # Pydantic Settings configuration
+│   └── settings.py                # Pydantic Settings with RECSYS_ prefix
 ├── scripts/
-│   ├── train.py                   # Model training CLI
-│   └── evaluate.py                # Evaluation & reporting
+│   ├── train.py                   # Offline model training CLI
+│   └── evaluate.py                # Evaluation benchmark report generator
 ├── src/
 │   ├── __init__.py
 │   ├── api/
 │   │   ├── __init__.py
-│   │   ├── main.py                # FastAPI application
-│   │   └── schemas.py             # Pydantic request/response models
+│   │   ├── main.py                # FastAPI routes and lifespan manager
+│   │   └── schemas.py             # Pydantic v2 request/response schemas
 │   ├── data/
 │   │   ├── __init__.py
-│   │   ├── loader.py              # MovieLens data downloader & parser
-│   │   ├── dataset.py             # Dataset utilities
-│   │   └── preprocessor.py        # Feature engineering & splits
+│   │   ├── dataset.py             # Seed data and synthetic generator
+│   │   ├── loader.py              # MovieLens downloader and parser
+│   │   └── preprocessor.py        # Temporal train/test splitting & sparse matrices
 │   ├── models/
 │   │   ├── __init__.py
-│   │   ├── collaborative.py       # ALS & Neural CF models
-│   │   ├── content_based.py       # TF-IDF content recommender
-│   │   ├── hybrid.py              # Netflix-style hybrid ensemble
-│   │   ├── recommender.py         # Core recommender engine
-│   │   └── evaluation.py          # Metrics (RMSE, NDCG, P@K, etc.)
+│   │   ├── collaborative.py       # ALS Matrix Factorization & Neural CF
+│   │   ├── content_based.py       # TF-IDF & Cosine Similarity recommender
+│   │   ├── hybrid.py              # Adaptive Netflix-style ensemble
+│   │   ├── recommender.py         # In-memory recommender implementation
+│   │   └── evaluation.py          # Metrics (RMSE, NDCG, Precision@K, Coverage)
 │   └── web/
 │       ├── __init__.py
-│       └── app.py                 # Streamlit Netflix-style UI
+│       ├── index.html             # High-contrast single page web app (Tailwind CSS)
+│       └── app.py                 # Streamlit dashboard interface
 ├── tests/
 │   ├── __init__.py
 │   ├── conftest.py                # Shared pytest fixtures
-│   ├── test_api.py                # API endpoint tests
-│   ├── test_data_loader.py        # Data loading tests
-│   ├── test_evaluation.py         # Metrics tests
-│   ├── test_models.py             # Model tests
-│   └── test_preprocessor.py       # Preprocessing tests
-├── models/                        # Trained model artifacts (gitignored)
-├── data/                          # Downloaded datasets (gitignored)
-├── reports/                       # Generated evaluation reports
-├── Dockerfile                     # Multi-stage Docker build
-├── docker-compose.yml             # API + Web UI orchestration
-├── Makefile                       # Development shortcuts
-├── pyproject.toml                 # Project metadata & tool config
+│   ├── test_api.py                # REST API test suite
+│   ├── test_data_loader.py        # Ingestion tests
+│   ├── test_evaluation.py         # Metric calculation tests
+│   ├── test_models.py             # ALS, Content, and Hybrid tests
+│   └── test_preprocessor.py       # Normalization and split tests
+├── models/                        # Serialized model artifacts
+├── reports/                       # Generated evaluation markdown reports
+├── Dockerfile                     # Multi-stage container build
+├── docker-compose.yml             # Container orchestration
+├── Makefile                       # Development task runner
+├── pyproject.toml                 # Ruff, Mypy, and Pytest configuration
 ├── requirements.txt               # Production dependencies
-├── requirements-dev.txt           # Development dependencies
+├── requirements-dev.txt           # Testing and code-quality tools
 ├── LICENSE                        # MIT License
-└── README.md                      # This file
+└── README.md                      # Project documentation
 ```
 
 ---
 
-## 🧠 Model Details
+## 🧠 Model Formulation
 
 ### Collaborative Filtering — ALS Matrix Factorization
 
-Decomposes the user-item ratings matrix $R \in \mathbb{R}^{m \times n}$ into two low-rank factor matrices:
+Approximates the user-item rating matrix $R \in \mathbb{R}^{m \times n}$ with rank-$k$ factor matrices:
 
 $$R \approx W H^T$$
 
-where $W \in \mathbb{R}^{m \times k}$ (user factors) and $H \in \mathbb{R}^{n \times k}$ (item factors). Optimized via Alternating Least Squares with L2 regularization:
+Optimized by Alternating Least Squares with L2 regularization:
 
 $$\min_{W,H} \sum_{(i,j) \in \Omega} (R_{ij} - w_i^T h_j)^2 + \lambda(\|W\|_F^2 + \|H\|_F^2)$$
 
-### Content-Based Filtering — TF-IDF + Cosine Similarity
+### Content-Based Filtering — TF-IDF & Cosine Distance
 
-Builds item feature vectors from movie titles (TF-IDF n-grams) and genres (multi-hot encoding). Recommends movies with highest cosine similarity to a user's preference profile:
+Constructs item representations $v_i$ from multi-hot genre binarization and title n-grams. Measures similarity via cosine distance:
 
 $$\text{sim}(a, b) = \frac{v_a \cdot v_b}{\|v_a\| \|v_b\|}$$
 
-### Hybrid Ensemble (Netflix-Style)
+### Adaptive Hybrid Blending
 
-Dynamically blends collaborative and content-based scores with adaptive weighting:
+Calculates hybrid prediction scores via dynamic profile-weighted combination:
 
-$$\text{score}(u, i) = \alpha \cdot \text{CF}(u, i) + (1 - \alpha) \cdot \text{CB}(u, i)$$
+$$\text{score}(u, i) = \alpha(u) \cdot \text{CF}(u, i) + (1 - \alpha(u)) \cdot \text{CB}(u, i)$$
 
-- **Active users** (≥5 ratings): $\alpha = 0.7$ (collaborative-heavy)
-- **Cold-start users** (<5 ratings): $\alpha = 0.3$ (content-heavy)
-
-### Evaluation Metrics
-
-| Metric | Description |
-|--------|-------------|
-| **RMSE** | Root Mean Square Error on rating predictions |
-| **MAE** | Mean Absolute Error on rating predictions |
-| **Precision@K** | Fraction of top-K recommendations that are relevant |
-| **Recall@K** | Fraction of relevant items found in top-K |
-| **NDCG@K** | Normalized Discounted Cumulative Gain (ranking quality) |
-| **Coverage** | Fraction of catalog items recommended across all users |
+- **$\alpha = 0.7$** for active users ($\ge 5$ interactions)
+- **$\alpha = 0.3$** for cold-start users ($< 5$ interactions)
 
 ---
 
-## ⚙️ Configuration
-
-Configure via environment variables (prefix `RECSYS_`):
-
-| Variable | Default | Description |
-|----------|---------|-------------|
-| `RECSYS_MODEL_DIR` | `models` | Directory for model artifacts |
-| `RECSYS_DATA_DIR` | `data` | Directory for datasets |
-| `RECSYS_API_HOST` | `0.0.0.0` | API server host |
-| `RECSYS_API_PORT` | `8000` | API server port |
-| `RECSYS_LOG_LEVEL` | `INFO` | Logging level |
-| `RECSYS_MODEL_TYPE` | `hybrid` | Model type (hybrid/collaborative/content) |
-| `RECSYS_N_FACTORS` | `50` | Number of latent factors |
-| `RECSYS_N_RECOMMENDATIONS` | `10` | Default number of recommendations |
-| `RECSYS_COLLABORATIVE_WEIGHT` | `0.7` | Collaborative filtering weight in hybrid |
-| `RECSYS_CONTENT_WEIGHT` | `0.3` | Content-based weight in hybrid |
-
----
-
-## 🐳 Docker
+## 🐳 Docker Deployment
 
 ```bash
-# Build and run
+# Build and run containerized services
 docker-compose up --build
 
-# Build only
-docker build -t movie-rec-system .
-
-# Run API only
-docker run -p 8000:8000 movie-rec-system
+# Or build standalone image:
+docker build -t streamflix-rec-system .
+docker run -p 8000:8000 streamflix-rec-system
 ```
 
 ---
 
-## 🧪 Development
+## 🧪 Testing & Code Quality
 
 ```bash
-# Install dev dependencies
-pip install -r requirements-dev.txt
+# Run unit and integration tests with coverage
+pytest tests/ -v --cov=src --cov-report=term-missing
 
-# Run tests
-pytest tests/ -v --cov=src --cov-report=html
-
-# Lint
+# Lint and check formatting
 ruff check src/ tests/
 ruff format --check src/ tests/
 
-# Type check
+# Type verification
 mypy src/
-
-# Format code
-black src/ tests/
 ```
-
----
-
-## 🤝 Contributing
-
-1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
 
 ---
 
