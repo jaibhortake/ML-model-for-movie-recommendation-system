@@ -1,0 +1,8 @@
+{
+  "rmse": 0.8845,
+  "mae": 0.6932,
+  "precision_at_10": 0.245,
+  "recall_at_10": 0.187,
+  "ndcg_at_10": 0.312,
+  "coverage": 0.824
+}
